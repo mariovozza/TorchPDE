@@ -3,6 +3,7 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 from time import time
 from tqdm import trange
+from pathlib import Path
 
 class ChanHilliard(nn.Module):
     """
@@ -112,7 +113,7 @@ class ChanHilliard(nn.Module):
         self.c = self.clip_0_1(c_new)
         return self.c
 
-    def run(self, show: bool = False, show_interval: int = 500):
+    def run(self, show: bool = False, show_interval: int = 500, save_path:Path=Path('result_img')):
         """
         Runs the simulation for the given number of steps.
 
@@ -121,6 +122,9 @@ class ChanHilliard(nn.Module):
             show_interval: Interval of steps at which to plot/save a 2D slice.
         """
         start_time = time()
+        if show:
+            save_path.mkdir(exist_ok=True)
+
         for step in trange(self.steps):
             # You're actually calling the __call__ method of the ChanHilliard object
             # and because ChanHilliard is a subclass
@@ -133,7 +137,7 @@ class ChanHilliard(nn.Module):
                 plt.imshow(mid_slice, cmap="RdBu", vmin=0, vmax=1)
                 plt.title(f"Step {step}")
                 plt.pause(0.01)
-                plt.savefig(f"step_{step:04}.png")
+                plt.savefig(save_path.joinpath(f"step_{step:04}.png"))
                 plt.clf()
 
         end_time = time()
@@ -145,7 +149,7 @@ class ChanHilliard(nn.Module):
 
 
 if __name__ == "__main__":
-    model = ChanHilliard(nx=512, ny=512, nz=512, steps=5000, device=torch.device("cuda:0"))
+    model = ChanHilliard(nx=256, ny=256, nz=256, steps=5000, device=torch.device("cuda:0"))
     model = torch.compile(model)
 
     final_c = model.run(show=False)
